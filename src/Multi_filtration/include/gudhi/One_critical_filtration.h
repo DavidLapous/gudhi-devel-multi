@@ -264,25 +264,7 @@ class One_critical_filtration : public std::vector<T>
     GUDHI_CHECK(result.size() == to_subtract.size(),
                 "Two filtration points with different number of parameters cannot be subtracted.");
 
-    bool allSameInf = true;
-    bool allNaN = true;
-    int sign = 0;
-    for (auto i = 0u; i < result.size(); ++i) {
-      if (subtract_(result[i], to_subtract[i])) {
-        allNaN = false;
-      } else {
-        if constexpr (!std::numeric_limits<T>::has_quiet_NaN) {
-          result = nan();
-          return result;
-        }
-      }
-      if (allSameInf) allSameInf = update_sign_(result[i], sign);
-    }
-
-    if (allSameInf) result = (sign == 1 ? inf() : minus_inf());
-    if (allNaN) result = nan();
-
-    return result;
+    return apply_operation_with_finite_values_(result, to_subtract, subtract_);
   }
 
   friend One_critical_filtration &operator-=(One_critical_filtration &result, const T &to_subtract)
@@ -303,18 +285,7 @@ class One_critical_filtration : public std::vector<T>
       return result;
     }
 
-    for (auto i = 0u; i < result.size(); ++i) {
-      if constexpr (std::numeric_limits<T>::has_quiet_NaN) {
-        subtract_(result[i], to_subtract);
-      } else {
-        if (!subtract_(result[i], to_subtract)) {
-          result = nan();
-          return result;
-        }
-      }
-    }
-
-    return result;
+    return apply_scalar_operation_on_finite_value_(result, to_subtract, subtract_);
   }
 
   // addition
@@ -357,25 +328,7 @@ class One_critical_filtration : public std::vector<T>
     GUDHI_CHECK(result.size() == to_add.size(),
                 "Two filtration points with different number of parameters cannot be added.");
 
-    bool allSameInf = true;
-    bool allNaN = true;
-    int sign = 0;
-    for (auto i = 0u; i < result.size(); ++i) {
-      if (add_(result[i], to_add[i])) {
-        allNaN = false;
-      } else {
-        if constexpr (!std::numeric_limits<T>::has_quiet_NaN) {
-          result = nan();
-          return result;
-        }
-      }
-      if (allSameInf) allSameInf = update_sign_(result[i], sign);
-    }
-
-    if (allSameInf) result = (sign == 1 ? inf() : minus_inf());
-    if (allNaN) result = nan();
-
-    return result;
+    return apply_operation_with_finite_values_(result, to_add, add_);
   }
 
   friend One_critical_filtration &operator+=(One_critical_filtration &result, const T &to_add)
@@ -396,18 +349,7 @@ class One_critical_filtration : public std::vector<T>
       return result;
     }
 
-    for (auto i = 0u; i < result.size(); ++i) {
-      if constexpr (std::numeric_limits<T>::has_quiet_NaN) {
-        add_(result[i], to_add);
-      } else {
-        if (!add_(result[i], to_add)) {
-          result = nan();
-          return result;
-        }
-      }
-    }
-
-    return result;
+    return apply_scalar_operation_on_finite_value_(result, to_add, add_);
   }
 
   // multiplication
@@ -452,41 +394,13 @@ class One_critical_filtration : public std::vector<T>
       const One_critical_filtration &finite = res_is_infinite ? to_mul : result;
       const T infinite = res_is_infinite ? result[0] : to_mul[0];
       result = finite;
-      for (auto &val : result) {
-        if constexpr (std::numeric_limits<T>::has_quiet_NaN) {
-          multiply_(val, infinite);
-        } else {
-          if (!multiply_(val, infinite)) {
-            result = nan();
-            return result;
-          }
-        }
-      }
-      return result;
+      return apply_scalar_operation_on_finite_value_(result, infinite, multiply_);
     }
 
     GUDHI_CHECK(result.size() == to_mul.size(),
                 "Two filtration points with different number of parameters cannot be multiplied.");
 
-    bool allSameInf = true;
-    bool allNaN = true;
-    int sign = 0;
-    for (auto i = 0u; i < result.size(); ++i) {
-      if (multiply_(result[i], to_mul[i])) {
-        allNaN = false;
-      } else {
-        if constexpr (!std::numeric_limits<T>::has_quiet_NaN) {
-          result = nan();
-          return result;
-        }
-      }
-      if (allSameInf) allSameInf = update_sign_(result[i], sign);
-    }
-
-    if (allSameInf) result = (sign == 1 ? inf() : minus_inf());
-    if (allNaN) result = nan();
-
-    return result;
+    return apply_operation_with_finite_values_(result, to_mul, multiply_);
   }
 
   friend One_critical_filtration &operator*=(One_critical_filtration &result, const T &to_mul)
@@ -506,18 +420,7 @@ class One_critical_filtration : public std::vector<T>
       return result;
     }
 
-    for (auto &val : result) {
-      if constexpr (std::numeric_limits<T>::has_quiet_NaN) {
-        multiply_(val, to_mul);
-      } else {
-        if (!multiply_(val, to_mul)) {
-          result = nan();
-          return result;
-        }
-      }
-    }
-
-    return result;
+    return apply_scalar_operation_on_finite_value_(result, to_mul, multiply_);
   }
 
   // division
@@ -555,23 +458,8 @@ class One_critical_filtration : public std::vector<T>
       return result;
     }
 
-    bool allSameInf = true;
-    bool allNaN = true;
-    int sign = 0;
-
     if (to_div_is_infinite) {
-      for (auto &val : result) {
-        if (divide_(val, to_div[0])) {
-          allNaN = false;
-        } else {
-          if constexpr (!std::numeric_limits<T>::has_quiet_NaN) {
-            result = nan();
-            return result;
-          }
-        }
-      }
-      if (allNaN) result = nan();
-      return result;
+      return apply_scalar_operation_on_finite_value_with_all_nan_possible_(result, to_div[0], divide_);
     }
 
     GUDHI_CHECK(res_is_infinite || result.size() == to_div.size(),
@@ -581,22 +469,7 @@ class One_critical_filtration : public std::vector<T>
       result.resize(to_div.size(), result[0]);
     }
 
-    for (auto i = 0u; i < result.size(); ++i) {
-      if (divide_(result[i], to_div[i])) {
-        allNaN = false;
-      } else {
-        if constexpr (!std::numeric_limits<T>::has_quiet_NaN) {
-          result = nan();
-          return result;
-        }
-      }
-      if (allSameInf) allSameInf = update_sign_(result[i], sign);
-    }
-
-    if (allSameInf) result = (sign == 1 ? inf() : minus_inf());
-    if (allNaN) result = nan();
-
-    return result;
+    return apply_operation_with_finite_values_(result, to_div, divide_);
   }
 
   friend One_critical_filtration &operator/=(One_critical_filtration &result, const T &to_div)
@@ -616,22 +489,7 @@ class One_critical_filtration : public std::vector<T>
       return result;
     }
 
-    bool allNaN = true;
-
-    for (auto i = 0u; i < result.size(); ++i) {
-      if (divide_(result[i], to_div)) {
-        allNaN = false;
-      } else {
-        if constexpr (!std::numeric_limits<T>::has_quiet_NaN) {
-          result = nan();
-          return result;
-        }
-      }
-    }
-
-    if (allNaN) result = nan();
-
-    return result;
+    return apply_scalar_operation_on_finite_value_with_all_nan_possible_(result, to_div, divide_);
   }
 
   // MODIFIERS
@@ -891,6 +749,74 @@ class One_critical_filtration : public std::vector<T>
     }
 
     return true;
+  }
+
+  template <typename F>
+  static One_critical_filtration &apply_operation_with_finite_values_(One_critical_filtration &result,
+                                                                      const One_critical_filtration &to_operate,
+                                                                      F &&operate)
+  {
+    bool allSameInf = true;
+    bool allNaN = true;
+    int sign = 0;
+    for (auto i = 0u; i < result.size(); ++i) {
+      if (operate(result[i], to_operate[i])) {
+        allNaN = false;
+      } else {
+        if constexpr (!std::numeric_limits<T>::has_quiet_NaN) {
+          result = nan();
+          return result;
+        }
+      }
+      if (allSameInf) allSameInf = update_sign_(result[i], sign);
+    }
+
+    if (allSameInf) result = (sign == 1 ? inf() : minus_inf());
+    if (allNaN) result = nan();
+
+    return result;
+  }
+
+  template <typename F>
+  static One_critical_filtration &apply_scalar_operation_on_finite_value_(One_critical_filtration &result,
+                                                                          const T &to_operate,
+                                                                          F &&operate)
+  {
+    for (auto &val : result) {
+      if constexpr (std::numeric_limits<T>::has_quiet_NaN) {
+        operate(val, to_operate);
+      } else {
+        if (!operate(val, to_operate)) {
+          result = nan();
+          return result;
+        }
+      }
+    }
+
+    return result;
+  }
+
+  template <typename F>
+  static One_critical_filtration &apply_scalar_operation_on_finite_value_with_all_nan_possible_(
+      One_critical_filtration &result,
+      const T &to_operate,
+      F &&operate)
+  {
+    bool allNaN = true;
+
+    for (auto &val : result) {
+      if (operate(val, to_operate)) {
+        allNaN = false;
+      } else {
+        if constexpr (!std::numeric_limits<T>::has_quiet_NaN) {
+          result = nan();
+          return result;
+        }
+      }
+    }
+    if (allNaN) result = nan();
+
+    return result;
   }
 };
 
