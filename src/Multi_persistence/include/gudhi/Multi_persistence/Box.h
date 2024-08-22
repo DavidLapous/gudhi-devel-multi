@@ -12,8 +12,9 @@
 #define BOX_H_INCLUDED
 
 #include <ostream>
-#include <vector>
+// #include <vector>
 
+#include <gudhi/Debug_utils.h>
 #include <gudhi/One_critical_filtration.h>
 
 namespace Gudhi::multi_persistence {
@@ -44,16 +45,16 @@ class Box {
   /**
    * Thresholds a point x to be lower than the top corner of the box
    */
-  inline void threshold_up(point_type &x) const;
+  // inline void threshold_up(point_type &x) const;
   /*
    * Thresholds a point x to be upper than the bottom corner of the box
    */
-  inline void threshold_down(point_type &x) const;
+  // inline void threshold_down(point_type &x) const;
   bool contains(const point_type &point) const;
   /**
    * Given a list of points, builds the smallest box containing all of them.
    */
-  void infer_from_filters(const std::vector<point_type> &Filters_list);
+  // void infer_from_filters(const std::vector<point_type> &Filters_list);
   bool is_trivial() const;
   std::pair<const point_type &, const point_type &> get_pair() const { return {bottomCorner_, upperCorner_}; }
   std::pair<point_type &, point_type &> get_pair() { return {bottomCorner_, upperCorner_}; }
@@ -85,25 +86,25 @@ inline void Box<T>::inflate(T delta) {
 /**
  * Define a box containing the filtration values.
  */
-template <typename T>
-inline void Box<T>::infer_from_filters(const std::vector<point_type> &Filters_list) {
-  int dimension = Filters_list.size();
-  int nsplx = Filters_list[0].size();
-  std::vector<T> lower(dimension);
-  std::vector<T> upper(dimension);
-  for (int i = 0; i < dimension; i++) {
-    T min = Filters_list[i][0];
-    T max = Filters_list[i][0];
-    for (int j = 1; j < nsplx; j++) {
-      min = std::min(min, Filters_list[i][j]);
-      max = std::max(max, Filters_list[i][j]);
-    }
-    lower[i] = min;
-    upper[i] = max;
-  }
-  bottomCorner_.swap(lower);
-  upperCorner_.swap(upper);
-}
+// template <typename T>
+// inline void Box<T>::infer_from_filters(const std::vector<point_type> &Filters_list) {
+//   int dimension = Filters_list.size();
+//   int nsplx = Filters_list[0].size();
+//   std::vector<T> lower(dimension);
+//   std::vector<T> upper(dimension);
+//   for (int i = 0; i < dimension; i++) {
+//     T min = Filters_list[i][0];
+//     T max = Filters_list[i][0];
+//     for (int j = 1; j < nsplx; j++) {
+//       min = std::min(min, Filters_list[i][j]);
+//       max = std::max(max, Filters_list[i][j]);
+//     }
+//     lower[i] = min;
+//     upper[i] = max;
+//   }
+//   bottomCorner_.swap(lower);
+//   upperCorner_.swap(upper);
+// }
 template <typename T>
 inline bool Box<T>::is_trivial() const {
   return bottomCorner_.empty() || upperCorner_.empty() || bottomCorner_.size() != upperCorner_.size();
@@ -148,22 +149,22 @@ std::ostream &operator<<(std::ostream &os, const Box<T> &box) {
   return os;
 }
 
-template <typename T>
-inline void Box<T>::threshold_up(point_type &x) const {
-  for (auto i = 0u; i < x.size(); i++) {
-    auto t = upperCorner_[i];
-    if (x[i] > t) x[i] = t;
-  }
-  return;
-}
-template <typename T>
-inline void Box<T>::threshold_down(point_type &x) const {
-  for (auto i = 0u; i < x.size(); i++) {
-    auto t = bottomCorner_[i];
-    if (x[i] < t) x[i] = t;
-  }
-  return;
-}
+// template <typename T>
+// inline void Box<T>::threshold_up(point_type &x) const {
+//   for (auto i = 0u; i < x.size(); i++) {
+//     auto t = upperCorner_[i];
+//     if (x[i] > t) x[i] = t;
+//   }
+//   return;
+// }
+// template <typename T>
+// inline void Box<T>::threshold_down(point_type &x) const {
+//   for (auto i = 0u; i < x.size(); i++) {
+//     auto t = bottomCorner_[i];
+//     if (x[i] < t) x[i] = t;
+//   }
+//   return;
+// }
 
 }  // namespace Gudhi::multi_persistence
 

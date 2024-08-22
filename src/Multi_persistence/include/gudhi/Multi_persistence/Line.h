@@ -45,7 +45,7 @@ class Line {
   /*
    * Returns the point whose intersection is \f$ \min\{ y\ge x \} \cap \mathrm{this}\f$
    */
-  inline point_type push_forward(point_type x) const;
+  // inline point_type push_forward(point_type x) const;
   /*
    * Retuns the time parameter of the coordinate given by push_forward.
    */
@@ -68,9 +68,9 @@ class Line {
   /*
    * Retuns the time parameter of the coordinate given by push_back.
    */
-  template <typename U = T>
-  inline U push_back2(const kcritical_point_type &x) const;
-  inline int get_dim() const;
+  // template <typename U = T>
+  // inline U push_back2(const kcritical_point_type &x) const;
+  // inline int get_dim() const;
   /*
    * Given a box, returns the coordinates of the intersection of this box and `this` as a pair of points (low, high)
    * in this line, representing this interval.
@@ -79,7 +79,7 @@ class Line {
   /*
    * Retuns the times parameter of the coordinates in the pair given by get_bounds.
    */
-  std::pair<T, T> get_bounds2(const Box<T> &box) const;
+  // std::pair<T, T> get_bounds2(const Box<T> &box) const;
 
   // translation
   inline friend Line &operator+=(Line &to_translate, const point_type &x) {
@@ -119,10 +119,6 @@ Line<T>::Line() {}
 template <typename T> Line<T>::Line(const point_type &x) : basepoint_(x) { check_direction();}
 
 template <typename T>
-Line<T>::Line(const point_type &x) : basepoint_(x) {
-  check_direction();
-}
-template <typename T>
 Line<T>::Line(point_type &&x) : basepoint_(std::move(x)) {
   check_direction();
 }
@@ -131,17 +127,17 @@ Line<T>::Line(const point_type &x, const point_type &v) : basepoint_(x), directi
   check_direction();
 }
 
-template <typename T>
-inline typename Line<T>::point_type Line<T>::push_forward(point_type x) const {  // TODO remove copy
-  if (x.is_inf() || x.is_nan() || x.is_minus_inf()) return x;
-  T t = this->push_forward2<T>(x);
-  if (direction_.size() > 0) {
-    for (std::size_t i = 0; i < x.size(); i++) x[i] = basepoint_[i] + t * direction_[i];
-  } else {
-    for (std::size_t i = 0; i < x.size(); i++) x[i] = basepoint_[i] + t;
-  }
-  return x;
-}
+// template <typename T>
+// inline typename Line<T>::point_type Line<T>::push_forward(point_type x) const {  // TODO remove copy
+//   if (x.is_inf() || x.is_nan() || x.is_minus_inf()) return x;
+//   T t = this->push_forward2<T>(x);
+//   if (direction_.size() > 0) {
+//     for (std::size_t i = 0; i < x.size(); i++) x[i] = basepoint_[i] + t * direction_[i];
+//   } else {
+//     for (std::size_t i = 0; i < x.size(); i++) x[i] = basepoint_[i] + t;
+//   }
+//   return x;
+// }
 template <typename T>
 template <typename U>
 inline U Line<T>::push_forward2(const point_type &x) const {
@@ -222,30 +218,30 @@ inline U Line<T>::push_back2(const point_type &x) const {
   return t;
 }
 
-template <typename T>
+// template <typename T>
 
-template <typename U>
-inline U Line<T>::push_back2(const kcritical_point_type &x) const {
-  constexpr const U inf =
-      std::numeric_limits<U>::has_infinity ? std::numeric_limits<U>::infinity() : std::numeric_limits<U>::max();
-  if (x.is_inf()) return inf;
-  if (x.is_minus_inf() || x.is_nan()) return -inf;
-  U t = -inf;
-  for (const auto &y : x) {
-    t = std::max(t, this->push_back2<U>(y));
-  }
-  return t;
-}
+// template <typename U>
+// inline U Line<T>::push_back2(const kcritical_point_type &x) const {
+//   constexpr const U inf =
+//       std::numeric_limits<U>::has_infinity ? std::numeric_limits<U>::infinity() : std::numeric_limits<U>::max();
+//   if (x.is_inf()) return inf;
+//   if (x.is_minus_inf() || x.is_nan()) return -inf;
+//   U t = -inf;
+//   for (const auto &y : x) {
+//     t = std::max(t, this->push_back2<U>(y));
+//   }
+//   return t;
+// }
 
-template <typename T>
-inline int Line<T>::get_dim() const {
-  return basepoint_.size();
-}
+// template <typename T>
+// inline int Line<T>::get_dim() const {
+//   return basepoint_.size();
+// }
 
-template <typename T>
-inline std::pair<T, T> Line<T>::get_bounds2(const Box<T> &box) const {
-  return {this->push_forward2(box.get_bottom_corner()), this->push_back2(box.get_upper_corner())};
-}
+// template <typename T>
+// inline std::pair<T, T> Line<T>::get_bounds2(const Box<T> &box) const {
+//   return {this->push_forward2(box.get_bottom_corner()), this->push_back2(box.get_upper_corner())};
+// }
 
 template <typename T>
 inline std::pair<typename Line<T>::point_type, typename Line<T>::point_type> Line<T>::get_bounds(

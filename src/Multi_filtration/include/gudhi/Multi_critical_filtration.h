@@ -15,7 +15,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
+// #include <functional>
 #include <iostream>
 #include <limits>
 #include <vector>
@@ -76,6 +76,10 @@ class Multi_critical_filtration {
       if (self[i] != *(it++)) return false;
     }
     return true;
+  }
+  inline friend bool operator!=(const Multi_critical_filtration &self, const Multi_critical_filtration &to_compare)
+  {
+    return !(self == to_compare);
   }
   void reserve(std::size_t n) { this->multi_filtration_.reserve(n); }
   void set_num_generators(std::size_t n) { this->multi_filtration_.resize(n); }
@@ -145,7 +149,7 @@ class Multi_critical_filtration {
       stuff.push_to(x);
     }
   }
-  // TODO : this is not well defined for kcritical <-> kcritical
+  // TODO : this is not well defined for k-critical <-> k-critical
 
   /** \brief This functions take the filtration value `this` and pulls it to the
    * cone \f$ \{ y\in \mathbb R^n : y<=x \} \f$. After calling this method, the
@@ -165,17 +169,17 @@ class Multi_critical_filtration {
   }
   // cannot be const, as gudhi iterators are not const
   template <typename U>
-  inline U linear_projection(const std::vector<U> &x) {
+  inline U compute_linear_projection(const std::vector<U> &x) {
     if constexpr (co) {
       U projection = std::numeric_limits<U>::lowest();
       for (const auto &y : *this) {
-        projection = std::max(projection, y.linear_projection(x));
+        projection = std::max(projection, y.compute_linear_projection(x));
       }
       return projection;
     } else {
       U projection = std::numeric_limits<U>::max();
       for (auto &y : *this) {  // cannot be const (Gudhi)
-        projection = std::min(projection, y.linear_projection(x));
+        projection = std::min(projection, y.compute_linear_projection(x));
       }
       return projection;
     }
@@ -184,13 +188,13 @@ class Multi_critical_filtration {
   /*
    * Checks if b is cleanable with respect to a
    */
-  static inline bool dominates(const OneCritical &a, const OneCritical &b, value_type max_error) {
-    if constexpr (co)
-      return a - max_error <= b;
-    else {
-      return a + max_error >= b;
-    }
-  }
+  // static inline bool dominates(const OneCritical &a, const OneCritical &b, value_type max_error) {
+  //   if constexpr (co)
+  //     return a - max_error <= b;
+  //   else {
+  //     return a + max_error >= b;
+  //   }
+  // }
 
   static inline bool dominates(const OneCritical &a, const OneCritical &b) {
     if constexpr (co)
@@ -209,14 +213,14 @@ class Multi_critical_filtration {
 
   /*
    * Same method as the one in OneCriticalFiltration.
-   * Given a grid, and assuming that `this` are the coordianates
+   * Given a grid, and assuming that `this` are the coordinates
    * in this grid, evaluate `this` into this grid
    */
   template <typename U>
-  inline Multi_critical_filtration<U> evaluate_in_grid(const std::vector<std::vector<U>> &grid) const {
+  inline Multi_critical_filtration<U> evaluate_coordinates_in_grid(const std::vector<std::vector<U>> &grid) const {
     Multi_critical_filtration<U> out(this->num_generators());
     for (std::size_t i = 0; i < this->num_generators(); ++i) {
-      out[i] = this->operator[](i).evaluate_in_grid(grid);
+      out[i] = this->operator[](i).evaluate_coordinates_in_grid(grid);
     }
     return out;
   }
@@ -224,24 +228,24 @@ class Multi_critical_filtration {
   /*
    * Remove redundant values
    */
-  inline void clean(value_type max_error = 0) {
-    // A bit ugly, todo : erase+removeif ?
-    for (std::size_t i = 0; i < multi_filtration_.size(); i++) {
-      for (std::size_t j = 0; j < multi_filtration_.size(); j++) {
-        if (i == j) continue;
-        if (dominates(multi_filtration_[j], multi_filtration_[i], max_error)) {
-          multi_filtration_[i].clear();
-        }
-        while (j < multi_filtration_.size() && dominates(multi_filtration_[i], multi_filtration_[j], max_error)) {
-          multi_filtration_[j].clear();
-          i--;
-        }
-      }
-    }
-    multi_filtration_.erase(std::remove_if(multi_filtration_.begin(), multi_filtration_.end(),
-                                           [](const One_critical_filtration<T> &a) { return a.empty(); }),
-                            multi_filtration_.end());
-  }
+  // inline void clean(value_type max_error = 0) {
+  //   // A bit ugly, todo : erase+remove_if ?
+  //   for (std::size_t i = 0; i < multi_filtration_.size(); i++) {
+  //     for (std::size_t j = 0; j < multi_filtration_.size(); j++) {
+  //       if (i == j) continue;
+  //       if (dominates(multi_filtration_[j], multi_filtration_[i], max_error)) {
+  //         multi_filtration_[i].clear();
+  //       }
+  //       while (j < multi_filtration_.size() && dominates(multi_filtration_[i], multi_filtration_[j], max_error)) {
+  //         multi_filtration_[j].clear();
+  //         i--;
+  //       }
+  //     }
+  //   }
+  //   multi_filtration_.erase(std::remove_if(multi_filtration_.begin(), multi_filtration_.end(),
+  //                                          [](const One_critical_filtration<T> &a) { return a.empty(); }),
+  //                           multi_filtration_.end());
+  // }
 
   /*
    * Adds a birth point to the list of births,
@@ -275,16 +279,16 @@ class Multi_critical_filtration {
 
     multi_filtration_.push_back(x);
   }
-  inline void re_clean() {
-    // Ensures all points are useful again. Can be useful if points are added manually.
-    // TODO : maybe optimize
-    Multi_critical_filtration<value_type> out;  // should be inf
-    out.multi_filtration_.reserve(this->multi_filtration_.size());
-    for (const auto &x : multi_filtration_) {
-      out.add_point(x);
-    }
-    std::swap(multi_filtration_, out);
-  }
+  // inline void re_clean() {
+  //   // Ensures all points are useful again. Can be useful if points are added manually.
+  //   // TODO : maybe optimize
+  //   Multi_critical_filtration<value_type> out;  // should be inf
+  //   out.multi_filtration_.reserve(this->multi_filtration_.size());
+  //   for (const auto &x : multi_filtration_) {
+  //     out.add_point(x);
+  //   }
+  //   std::swap(multi_filtration_, out);
+  // }
 
   // easy debug
   inline friend std::ostream &operator<<(std::ostream &stream, const Multi_critical_filtration<T, co> &truc) {
@@ -326,28 +330,28 @@ class Multi_critical_filtration {
 
   /*
    * Same as its one critical counterpart.
-   * If a grid is given, projects multifiltration_ on this grid and returns
+   * If a grid is given, projects multi_filtration_ on this grid and returns
    * multi critical filtration composed of the coordinates in the given grid
    *
    */
   template <typename oned_array>
-  inline Multi_critical_filtration<std::int32_t> coordinates_in_grid(const std::vector<oned_array> &grid) const {
+  inline Multi_critical_filtration<std::int32_t> compute_coordinates_in_grid(const std::vector<oned_array> &grid) const {
     assert(grid.size() >= this->num_generators());
     Multi_critical_filtration<std::int32_t> out(this->num_generators());
     for (std::size_t i = 0u; i < this->num_generators(); ++i) {
-      out[i] = this->multi_filtration_[i].coordinates_in_grid(grid);
+      out[i] = this->multi_filtration_[i].compute_coordinates_in_grid(grid);
     }
     return out;
   }
   /*
-   * Same as `coordinates_in_grid`, but does the operation in-place.
+   * Same as `compute_coordinates_in_grid`, but does the operation in-place.
    *
    */
   template <typename oned_array>
-  inline void coordinates_in_grid_inplace(const std::vector<oned_array> &grid, bool coordinate = true) {
+  inline void project_onto_grid(const std::vector<oned_array> &grid, bool coordinate = true) {
     assert(grid.size() >= this->num_generators());
     for (auto &x : this->multi_filtration_) {
-      x.coordinates_in_grid_inplace(grid, coordinate);
+      x.project_onto_grid(grid, coordinate);
     }
   }
   template <typename U>
