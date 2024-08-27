@@ -5,7 +5,7 @@
  *    Copyright (C) 2023 Inria
  *
  *    Modification(s):
- *      - 2024/08 Hannah Schreiber: Generalization to all signed arithmetic types for T
+ *      - 2024/08 Hannah Schreiber: Optimization and correction + numeric_limits
  *      - YYYY/MM Author: Description of the modification
  */
 
@@ -16,7 +16,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-// #include <functional>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -186,7 +185,7 @@ class Multi_critical_filtration
       bool isContained = false;
       for (std::size_t j = 0u; j < multi_filtration_.size() && !isContained; ++j) {
         // i<j
-        if (_strictly_contains(multi_filtration_[j], other.multi_filtration_[i])) isContained = true;
+        isContained = _strictly_contains(multi_filtration_[j], other.multi_filtration_[i]);
       }
       if (!isContained) return false;
     }
@@ -210,7 +209,7 @@ class Multi_critical_filtration
       bool isContained = false;
       for (std::size_t j = 0u; j < multi_filtration_.size() && !isContained; ++j) {
         // i<j
-        if (_contains(multi_filtration_[j], other.multi_filtration_[i])) isContained = true;
+        isContained = _contains(multi_filtration_[j], other.multi_filtration_[i]);
       }
       if (!isContained) return false;
     }
