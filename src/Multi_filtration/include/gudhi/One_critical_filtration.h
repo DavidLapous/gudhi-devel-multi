@@ -5,7 +5,7 @@
  *    Copyright (C) 2023 Inria
  *
  *    Modification(s):
- *      - 2024/08 Hannah Schreiber: Generalization to all arithmetic types for T
+ *      - 2024/08 Hannah Schreiber: Generalization to all signed arithmetic types for T
  *      - YYYY/MM Author: Description of the modification
  */
 
@@ -830,18 +830,18 @@ class numeric_limits<Gudhi::multi_filtration::One_critical_filtration<T> >
  public:
   static constexpr bool has_infinity = true;
 
-  static Gudhi::multi_filtration::One_critical_filtration<T> infinity() noexcept
+  static constexpr Gudhi::multi_filtration::One_critical_filtration<T> infinity() noexcept
   {
     return Gudhi::multi_filtration::One_critical_filtration<T>::inf();
   };
 
   // non-standard
-  static Gudhi::multi_filtration::One_critical_filtration<T> minus_infinity() noexcept
+  static constexpr Gudhi::multi_filtration::One_critical_filtration<T> minus_infinity() noexcept
   {
     return Gudhi::multi_filtration::One_critical_filtration<T>::minus_inf();
   };
 
-  static Gudhi::multi_filtration::One_critical_filtration<T> max() noexcept(false)
+  static constexpr Gudhi::multi_filtration::One_critical_filtration<T> max() noexcept(false)
   {
     throw std::logic_error(
         "The maximal value cannot be represented with no finite numbers of parameters."
@@ -849,12 +849,12 @@ class numeric_limits<Gudhi::multi_filtration::One_critical_filtration<T> >
   };
 
   // non-standard, so I don't want to define a default value.
-  static Gudhi::multi_filtration::One_critical_filtration<T> max(unsigned int n) noexcept
+  static constexpr Gudhi::multi_filtration::One_critical_filtration<T> max(unsigned int n) noexcept
   {
     return Gudhi::multi_filtration::One_critical_filtration<T>(n, std::numeric_limits<T>::max());
   };
 
-  static Gudhi::multi_filtration::One_critical_filtration<T> quiet_NaN() noexcept
+  static constexpr Gudhi::multi_filtration::One_critical_filtration<T> quiet_NaN() noexcept
   {
     return Gudhi::multi_filtration::One_critical_filtration<T>::nan();
   };
