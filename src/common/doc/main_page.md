@@ -294,6 +294,29 @@
   </tr>
 </table>
 
+### Multi-parameter Filtration Values
+<table>
+  <tr>
+    <td width="35%" rowspan=2>
+      \image html "gicvisu.jpg"
+    </td>
+    <td width="50%">
+    Data structures representing one (1-critical) or multiple (k-critical) filtration values of a same simplex with
+    multiple filtration parameters. <br>
+    </td>
+    <td width="15%">
+      <b>Author:</b> David Loiseaux<br>
+      <b>Introduced in:</b> GUDHI 3.1x.x<br>
+      <b>License:</b> MIT<br>
+    </td>
+  </tr>
+  <tr>
+    <td colspan=2 height="25">
+      <b>User manual:</b> \ref multi_filtration
+    </td>
+  </tr>
+</table>
+
 ## Manifold reconstructions
 ### Coxeter triangulation
 
