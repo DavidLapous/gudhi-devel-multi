@@ -298,7 +298,7 @@
 <table>
   <tr>
     <td width="35%" rowspan=2>
-      \image html "gicvisu.jpg"
+      \image html "radius_density_complex_without_interval.png"
     </td>
     <td width="50%">
     Data structures representing one (1-critical) or multiple (k-critical) filtration values of a same simplex with

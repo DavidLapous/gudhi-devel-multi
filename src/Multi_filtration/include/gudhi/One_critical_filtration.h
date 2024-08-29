@@ -5,7 +5,7 @@
  *    Copyright (C) 2023 Inria
  *
  *    Modification(s):
- *      - 2024/08 Hannah Schreiber: Generalization to all signed arithmetic types for T
+ *      - 2024/08 Hannah Schreiber: Generalization to all signed arithmetic types for T + doc
  *      - YYYY/MM Author: Description of the modification
  */
 
@@ -78,7 +78,6 @@ class One_critical_filtration : public std::vector<T>
    * @brief Default constructor. Constructs an empty vector with 0 parameters.
    */
   One_critical_filtration() : Base() {};
-  //TODO: Accept {-inf, -inf, ...} / {inf, inf, ...} / {NaN, NaN, ...} as resp. -inf / inf / NaN to avoid the warnings.
   /**
    * @brief Constructs a vector of the size of the given number of parameters with -inf as value for each entry.
    *
@@ -93,7 +92,7 @@ class One_critical_filtration : public std::vector<T>
    * @brief Constructs a vector of the size of the given number of parameters and the given value for each entry.
    *
    * @warning If @p value is `inf`, `-inf`, or `NaN`, the vector `{value, value, ...}` with \f$ n > 1 \f$ entries
-   * are not wrong but will not be considered as respectively "infinity", "minus infinity" or "NaN" (the corresponding
+   * is not wrong but will not be considered as respectively "infinity", "minus infinity" or "NaN" (the corresponding
    * methods @ref is_inf(), @ref is_minus_inf() and @ref is_nan() will return false). For this purpose, please use
    * the static methods @ref inf(), @ref minus_inf() and @ref nan() instead.
    * 
@@ -218,6 +217,8 @@ class One_critical_filtration : public std::vector<T>
   }
 
   // DESCRIPTORS
+
+  //TODO: Accept {-inf, -inf, ...} / {inf, inf, ...} / {NaN, NaN, ...} as resp. -inf / inf / NaN.
 
   /**
    * @brief Returns `true` if and only if the filtration value is considered as infinity.
@@ -1010,7 +1011,7 @@ class One_critical_filtration : public std::vector<T>
    * 
    * @param x The target filtration value towards which to push.
    */
-  void push_to(const One_critical_filtration &x)
+  void push_to_least_common_upper_bound(const One_critical_filtration &x)
   {
     if (this->is_inf() || this->is_nan() || x.is_nan() || x.is_minus_inf()) return;
     if (x.is_inf() || this->is_minus_inf()) {
@@ -1034,7 +1035,7 @@ class One_critical_filtration : public std::vector<T>
    * 
    * @param x The target filtration value towards which to pull.
    */
-  void pull_to(const One_critical_filtration &x)
+  void pull_to_greatest_common_lower_bound(const One_critical_filtration &x)
   {
     if (x.is_inf() || this->is_nan() || x.is_nan() || this->is_minus_inf()) return;
     if (this->is_inf() || x.is_minus_inf()) {
@@ -1049,10 +1050,6 @@ class One_critical_filtration : public std::vector<T>
       Base::operator[](i) = Base::operator[](i) > x[i] ? x[i] : Base::operator[](i);
   }
 
-  /*
-   * Same as `compute_coordinates_in_grid` but does the operation in-place
-   */
-  
   /**
    * @brief Projects the filtration value into the given grid. If @p coordinate is false, the entries are set to
    * the nearest upper bound value with the same parameter in the grid. Otherwise, the entries are set to the indices
@@ -1092,7 +1089,7 @@ class One_critical_filtration : public std::vector<T>
    * @tparam U Arithmetic type of the result. Default value: `T`.
    * @param f Filtration value.
    * @param x Vector of coefficients.
-   * @return U Scalar product of @p f with @p x.
+   * @return Scalar product of @p f with @p x.
    */
   template <typename U = T>
   friend U compute_linear_projection(const One_critical_filtration &f, const std::vector<U> &x)
@@ -1133,12 +1130,6 @@ class One_critical_filtration : public std::vector<T>
   }
 
   /**
-   * Given a grid in an array of shape (num_parameters, filtration_values of this parameter),
-   * projects itself into this grid, and returns the coordinates of this projected points
-   * in the given grid
-   */
-
-  /**
    * @brief Computes the coordinates in the given grid, corresponding to the nearest upper bounds of the entries
    * in the given filtration value.
    * The grid has to be represented as a vector of vectors of ordered values convertible into `out_type`. An index
@@ -1149,7 +1140,7 @@ class One_critical_filtration : public std::vector<T>
    * @tparam out_type Signed arithmetic type. Default value: std::int32_t.
    * @tparam U Type which is convertible into `out_type`.
    * @param f Filtration value to project.
-   * @param grid Vector of vector to project into.
+   * @param grid Vector of vectors to project into.
    * @return Filtration value \f$ out \f$ whose entry correspond to the indices of the projected values. That is,
    * the projection of \f$ f[i] \f$ is \f$ grid[i][out[i]] \f$.
    */
@@ -1161,12 +1152,6 @@ class One_critical_filtration : public std::vector<T>
     coords.project_onto_grid(grid);
     return coords;
   }
-
-  /**
-   * Given a grid in an array of shape (num_parameters, filtration_values of this parameter),
-   * and assuming that `this` correspond to the coordinates in this grid,
-   * returns the points evaluated in this grid
-   */
   
   /**
    * @brief Computes the values in the given grid corresponding to the coordinates given by the given filtration 
@@ -1236,9 +1221,8 @@ class One_critical_filtration : public std::vector<T>
   constexpr static const T T_inf =
       std::numeric_limits<T>::has_infinity ? std::numeric_limits<T>::infinity() : std::numeric_limits<T>::max();
 
-  // for compiler
   /**
-   * @brief Indicates if the class manage multi-critical filtration values.
+   * @brief Indicates if the class manages multi-critical filtration values.
    */
   constexpr static bool is_multi_critical = false;
 
