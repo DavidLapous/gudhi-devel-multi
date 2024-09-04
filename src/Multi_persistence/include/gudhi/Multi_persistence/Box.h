@@ -37,11 +37,11 @@ namespace Gudhi::multi_persistence {
 template <typename T>
 class Box
 {
+ public:
   using Point = Gudhi::multi_filtration::One_critical_filtration<T>; /**< Type of a point in \f$\mathbb R^n\f$. */
 
- public:
   /**
-   * @brief Default constructor. Constructs a trivial box.
+   * @brief Default constructor. Constructs a trivial box with corners at minus infinity.
    */
   Box() {}
 
@@ -67,17 +67,6 @@ class Box
   Box(const std::pair<Point, Point> &box) : lowerCorner_(box.first), upperCorner_(box.second) {}
 
   /**
-   * @brief Inflates the box by delta.
-   * 
-   * @param delta Inflation coefficient.
-   */
-  void inflate(T delta)
-  {
-    lowerCorner_ -= delta;
-    upperCorner_ += delta;
-  }
-
-  /**
    * @brief Returns the lowest of both defining corners.
    */
   const Point &get_lower_corner() const { return lowerCorner_; }
@@ -96,6 +85,34 @@ class Box
    * @brief Returns the greatest of both defining corners.
    */
   const Point &get_upper_corner() const { return upperCorner_; }
+
+  /**
+   * @brief Returns a pair of const references to both defining corners.
+   */
+  std::pair<const Point &, const Point &> get_bounding_corners() const { return {lowerCorner_, upperCorner_}; }
+
+  /**
+   * @brief Returns a pair of references to both defining corners.
+   */
+  std::pair<Point &, Point &> get_bounding_corners() { return {lowerCorner_, upperCorner_}; }
+
+  /**
+   * @brief Returns true if and only if one of the following is true:
+   * - one of the corners is empty
+   * - one of the corners has value NaN
+   * - both corners have value infinity
+   * - both corners have value minus infinity
+   * - both corners are finite but don't have the same dimension.
+   */
+  bool is_trivial() const
+  {
+    return lowerCorner_.empty() || upperCorner_.empty() ||
+           lowerCorner_.is_nan() || upperCorner_.is_nan() ||
+           (lowerCorner_.is_inf() && upperCorner_.is_inf()) ||
+           (lowerCorner_.is_minus_inf() && upperCorner_.is_minus_inf()) ||
+           (lowerCorner_.is_finite() && upperCorner_.is_finite() &&
+            lowerCorner_.num_parameters() != upperCorner_.num_parameters());
+  }
 
   /**
    * @brief Returns true if and only if the given point is inside the box.
@@ -119,40 +136,23 @@ class Box
   }
 
   /**
-   * @brief Returns true if and only if one of the following is true:
-   * - one of the corners is empty
-   * - one of the corners has value NaN
-   * - both corners have value infinity
-   * - both corners have value minus infinity
-   * - both corners are finite but don't have the same dimension.
-   */
-  bool is_trivial() const
-  {
-    return lowerCorner_.empty() || upperCorner_.empty() ||
-           lowerCorner_.is_nan() || upperCorner_.is_nan() ||
-           (lowerCorner_.is_inf() && upperCorner_.is_inf()) ||
-           (lowerCorner_.is_minus_inf() && upperCorner_.is_minus_inf()) ||
-           (lowerCorner_.is_finite() && upperCorner_.is_finite() &&
-            lowerCorner_.num_parameters() != upperCorner_.num_parameters());
-  }
-
-  /**
-   * @brief Returns a pair of const references to both defining corners.
-   */
-  std::pair<const Point &, const Point &> get_bounding_corners() const { return {lowerCorner_, upperCorner_}; }
-
-  /**
-   * @brief Returns a pair of references to both defining corners.
-   */
-  std::pair<Point &, Point &> get_bounding_corners() { return {lowerCorner_, upperCorner_}; }
-
-  /**
    * @brief Returns the dimension of the box. If the box is trivial or both corners are infinite, the dimension is 0.
    */
   std::size_t dimension() const {
     if (is_trivial()) return 0;
     if (lowerCorner_.is_minus_inf() && upperCorner_.is_inf()) return 0; //not so sure what we want to do here
     return lowerCorner_.is_finite() ? lowerCorner_.size() : upperCorner_.size();
+  }
+
+  /**
+   * @brief Inflates the box by delta.
+   * 
+   * @param delta Inflation coefficient.
+   */
+  void inflate(T delta)
+  {
+    lowerCorner_ -= delta;
+    upperCorner_ += delta;
   }
 
   /**

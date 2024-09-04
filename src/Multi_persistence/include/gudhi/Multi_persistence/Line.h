@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <limits>
 
 #include <gudhi/Debug_utils.h>
 #include <gudhi/One_critical_filtration.h>
@@ -53,19 +54,19 @@ class Line
   /**
    * @brief Default constructor. Sets the number of coordinates to 0.
    */
-  Line() {}
+  Line() : basePoint_(0), direction_(0) {}  //has to be explicitly set to 0, otherwise becomes -inf
   /**
    * @brief Constructs a line going through the given point with slope 1.
    * 
    * @param x A point of the line.
    */
-  Line(const Point &x) : basePoint_(x) {}       //default direction
+  Line(const Point &x) : basePoint_(x), direction_(0) {}       //default direction
   /**
    * @brief Constructs a line going through the given point with slope 1.
    * 
    * @param x A point of the line. Will be moved.
    */
-  Line(Point &&x) : basePoint_(std::move(x)) {} //default direction
+  Line(Point &&x) : basePoint_(std::move(x)), direction_(0) {} //default direction
   /**
    * @brief Constructs a line going through the given point in the direction of the given vector.
    * If the vector has no coordinates, the slope is assumed to be 1.
@@ -240,7 +241,7 @@ class Line
   {
     if (box.is_trivial()) return {Point::inf(), Point::inf()};
 
-    T bottom = compute_forward_intersection(box.get_bottom_corner());
+    T bottom = compute_forward_intersection(box.get_lower_corner());
     T top = compute_backward_intersection(box.get_upper_corner());
 
     if (bottom > top) return {Point::inf(), Point::inf()}; //no intersection
