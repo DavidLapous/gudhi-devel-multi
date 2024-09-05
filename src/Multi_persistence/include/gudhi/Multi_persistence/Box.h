@@ -30,13 +30,12 @@ namespace Gudhi::multi_persistence {
  * @ingroup multi_persistence
  *
  * @brief Simple box in \f$\mathbb R^n\f$ defined by two diametrically opposite corners.
- * 
+ *
  * @tparam T Type of the coordinates of the Box. Has to follow the conditions of the template parameter of
  * @ref One_critical_filtration "".
  */
 template <typename T>
-class Box
-{
+class Box {
  public:
   using Point = Gudhi::multi_filtration::One_critical_filtration<T>; /**< Type of a point in \f$\mathbb R^n\f$. */
 
@@ -48,23 +47,21 @@ class Box
   /**
    * @brief Constructs a box from the two given corners. Assumes that \f$ lowerCorner \le @p upperCorner \f$ and
    * if both are finite values, they have the same dimension.
-   * 
+   *
    * @param lowerCorner First corner of the box. Has to be smaller than `upperCorner`.
    * @param upperCorner Second corner of the box. Has to be greater than `lowerCorner`.
    */
-  Box(const Point &lowerCorner, const Point &upperCorner)
-      : lowerCorner_(lowerCorner), upperCorner_(upperCorner)
-  {
+  Box(const Point &lowerCorner, const Point &upperCorner) : lowerCorner_(lowerCorner), upperCorner_(upperCorner) {
     GUDHI_CHECK(lowerCorner.size() == upperCorner.size() && lowerCorner <= upperCorner, "This box is trivial !");
   }
 
   /**
    * @brief Constructs a box from the two given corners. Assumes that \f$ box.first \le @p box.second \f$ and
    * if both are finite values, they have the same dimension.
-   * 
+   *
    * @param box Pair of corners defining the wished box.
    */
-  Box(const std::pair<Point, Point> &box) : lowerCorner_(box.first), upperCorner_(box.second) {}
+  Box(const std::pair<Point, Point> &box) : Box(box.first, box.second) {}
 
   /**
    * @brief Returns the lowest of both defining corners.
@@ -104,11 +101,9 @@ class Box
    * - both corners have value minus infinity
    * - both corners are finite but don't have the same dimension.
    */
-  bool is_trivial() const
-  {
-    return lowerCorner_.empty() || upperCorner_.empty() ||
-           lowerCorner_.is_nan() || upperCorner_.is_nan() ||
-           (lowerCorner_.is_inf() && upperCorner_.is_inf()) ||
+  bool is_trivial() const {
+    return lowerCorner_.empty() || upperCorner_.empty() || lowerCorner_.is_nan() || upperCorner_.is_nan() ||
+           (lowerCorner_.is_plus_inf() && upperCorner_.is_plus_inf()) ||
            (lowerCorner_.is_minus_inf() && upperCorner_.is_minus_inf()) ||
            (lowerCorner_.is_finite() && upperCorner_.is_finite() &&
             lowerCorner_.num_parameters() != upperCorner_.num_parameters());
@@ -119,10 +114,9 @@ class Box
    * If the box is not {-infinity, infinity} and the given point is finite, but has not the same dimension
    * than the box, the point is considered outside.
    */
-  bool contains(const Point &point) const
-  {
+  bool contains(const Point &point) const {
     if (point.is_nan() || is_trivial()) return false;
-    if (point.is_inf()) return upperCorner_.is_inf();
+    if (point.is_plus_inf()) return upperCorner_.is_plus_inf();
     if (point.is_minus_inf()) return lowerCorner_.is_minus_inf();
 
     if ((lowerCorner_.is_finite() && point.size() != lowerCorner_.size()) ||
@@ -140,17 +134,16 @@ class Box
    */
   std::size_t dimension() const {
     if (is_trivial()) return 0;
-    if (lowerCorner_.is_minus_inf() && upperCorner_.is_inf()) return 0; //not so sure what we want to do here
+    if (lowerCorner_.is_minus_inf() && upperCorner_.is_plus_inf()) return 0;  // not so sure what we want to do here
     return lowerCorner_.is_finite() ? lowerCorner_.size() : upperCorner_.size();
   }
 
   /**
    * @brief Inflates the box by delta.
-   * 
+   *
    * @param delta Inflation coefficient.
    */
-  void inflate(T delta)
-  {
+  void inflate(T delta) {
     lowerCorner_ -= delta;
     upperCorner_ += delta;
   }
@@ -158,8 +151,7 @@ class Box
   /**
    * @brief Outstream operator.
    */
-  friend std::ostream &operator<<(std::ostream &os, const Box<T> &box)
-  {
+  friend std::ostream &operator<<(std::ostream &os, const Box<T> &box) {
     os << "Box -- Bottom corner : ";
     os << box.get_lower_corner();
     os << ", Top corner : ";
